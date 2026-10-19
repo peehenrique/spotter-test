@@ -54,7 +54,7 @@ export function TripForm({
           type="number"
           min={1}
           max={200000}
-          step={500}
+          step={1}
           value={load}
           onChange={(event) => onLoad(event.target.value)}
           required
