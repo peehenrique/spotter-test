@@ -43,6 +43,50 @@ button { cursor: pointer; }
   background-size: 56px 56px;
 }
 
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(4, 12, 16, 0.72);
+}
+
+.modal {
+  width: min(440px, 100%);
+  display: grid;
+  gap: 12px;
+  padding: 22px 22px 18px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: #102833;
+  box-shadow: var(--shadow);
+}
+
+.modal-kicker {
+  margin: 0;
+  color: var(--blue);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.modal h2 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 650;
+  letter-spacing: -0.03em;
+  line-height: 1.25;
+}
+
+.modal p { margin: 0; color: #d5e2e6; font-size: 15px; line-height: 1.5; }
+
+.modal-credit { color: var(--ink); font-weight: 600; }
+
+.modal-accept { width: 100%; margin-top: 4px; }
+
 .topnav {
   height: 68px;
   flex: none;

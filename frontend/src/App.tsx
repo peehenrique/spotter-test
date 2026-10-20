@@ -6,6 +6,7 @@ import { TripForm } from "./components/TripForm";
 import { RoutePanel } from "./components/RoutePanel";
 import { MapView } from "./components/MapView";
 import { TopNav } from "./components/TopNav";
+import { DisclaimerModal } from "./components/DisclaimerModal";
 import { AnalysisCard } from "./components/AnalysisCard";
 import { TimelineCard } from "./components/TimelineCard";
 import { StatusCard } from "./components/StatusCard";
@@ -95,6 +96,7 @@ export function App() {
 
   return (
     <div className="shell">
+      <DisclaimerModal />
       <TopNav />
       <div className={plan && selected ? "canvas" : "canvas no-dock"}>
         {loading && <div className="progress" role="progressbar" aria-label="Planning trip" />}
