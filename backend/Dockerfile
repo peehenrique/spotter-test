@@ -8,7 +8,6 @@
 # Variáveis (configure no Easypanel):
 # - DJANGO_SECRET_KEY
 # - DJANGO_DEBUG=0
-# - DJANGO_ALLOWED_HOSTS = host público do backend (ou *)
 
 FROM python:3.11-slim
 
