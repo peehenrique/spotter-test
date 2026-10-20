@@ -9,7 +9,6 @@
 # - DJANGO_SECRET_KEY
 # - DJANGO_DEBUG=0
 # - DJANGO_ALLOWED_HOSTS = host público do backend (ou *)
-# - CORS_ALLOWED_ORIGINS = URL pública do frontend (ex: https://rotas.seudominio.com)
 
 FROM python:3.11-slim
 
