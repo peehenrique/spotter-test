@@ -10,7 +10,7 @@ def _series(**overrides):
         times=["2026-10-20T14:00", "2026-10-20T15:00", "2026-10-20T16:00"],
         wind_mph=[10.0, 20.0, 30.0],
         rain_in_hr=[0.0, 0.2, 0.0],
-        snow_cm=[0.0, 2.54, 0.0],
+        snow_in_hr=[0.0, 1.0, 0.0],
     )
     base.update(overrides)
     return HourlySeries(**base)
@@ -41,6 +41,7 @@ class OpenMeteoParserTests(SimpleTestCase):
         }
         series = parse_open_meteo(payload, 1)
         self.assertEqual(series[0].rain_in_hr, [0.05])
+        self.assertEqual(series[0].snow_in_hr, [2.54])
 
     def test_multiple_locations_are_a_list(self):
         hourly = {
@@ -54,7 +55,7 @@ class OpenMeteoParserTests(SimpleTestCase):
 
 
 class ReadingTests(SimpleTestCase):
-    def test_hour_containing_the_eta_and_snow_conversion(self):
+    def test_hour_containing_the_eta_keeps_snowfall_in_inches(self):
         moment = datetime(2026, 10, 20, 15, 40, tzinfo=timezone.utc)
         wind, rain, snow = reading_at(_series(), moment)
         self.assertEqual(wind, 20)
@@ -62,7 +63,7 @@ class ReadingTests(SimpleTestCase):
         self.assertAlmostEqual(snow, 1.0)
 
     def test_null_hour_falls_back_to_a_neighbor(self):
-        series = _series(wind_mph=[10.0, None, 30.0], rain_in_hr=[0.0, None, 0.0], snow_cm=[0.0, None, 0.0])
+        series = _series(wind_mph=[10.0, None, 30.0], rain_in_hr=[0.0, None, 0.0], snow_in_hr=[0.0, None, 0.0])
         moment = datetime(2026, 10, 20, 15, 10, tzinfo=timezone.utc)
         wind, rain, snow = reading_at(series, moment)
         self.assertEqual((wind, rain, snow), (10.0, 0.0, 0.0))

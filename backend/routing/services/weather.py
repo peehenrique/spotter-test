@@ -21,7 +21,7 @@ class HourlySeries:
     times: list[str]
     wind_mph: list[float | None]
     rain_in_hr: list[float | None]
-    snow_cm: list[float | None]
+    snow_in_hr: list[float | None]
 
 
 class WeatherClient:
@@ -100,7 +100,7 @@ def parse_open_meteo(payload: dict | list, count: int) -> list[HourlySeries]:
                 times=[str(value) for value in times],
                 wind_mph=[_number(value) for value in wind],
                 rain_in_hr=[_number(value) for value in rain],
-                snow_cm=[_number(value) for value in snow],
+                snow_in_hr=[_number(value) for value in snow],
             )
         )
     return series
@@ -117,7 +117,7 @@ def _rain_series(hourly: dict, count: int) -> list:
 def reading_at(series: HourlySeries, moment: datetime, time_index: dict[str, int] | None = None) -> tuple[float, float, float]:
     """Return wind mph, rain in/hr, and snow in/hr for the hour that contains `moment`.
 
-    Snowfall from Open-Meteo is centimeters and is converted to inches.
+    Snowfall is already inches because the request sets precipitation_unit to inch.
     """
     if not series.times:
         raise PlanError("Weather data does not cover this departure.")
@@ -130,10 +130,10 @@ def reading_at(series: HourlySeries, moment: datetime, time_index: dict[str, int
     index = _nearby_complete_hour(series, index)
     wind = series.wind_mph[index]
     rain = series.rain_in_hr[index]
-    snow_cm = series.snow_cm[index]
-    if wind is None or rain is None or snow_cm is None:
+    snow = series.snow_in_hr[index]
+    if wind is None or rain is None or snow is None:
         raise PlanError("Weather data does not cover this departure.")
-    return float(wind), float(rain), float(snow_cm) / 2.54
+    return float(wind), float(rain), float(snow)
 
 
 def _number(value: object) -> float | None:
@@ -175,7 +175,7 @@ def _complete(series: HourlySeries, index: int) -> bool:
     return (
         series.wind_mph[index] is not None
         and series.rain_in_hr[index] is not None
-        and series.snow_cm[index] is not None
+        and series.snow_in_hr[index] is not None
     )
 
 

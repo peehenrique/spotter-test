@@ -53,7 +53,7 @@ class ScriptedWeather:
                     times=list(hours),
                     wind_mph=[wind for _ in hours],
                     rain_in_hr=[0.0 for _ in hours],
-                    snow_cm=[0.0 for _ in hours],
+                    snow_in_hr=[0.0 for _ in hours],
                 )
             )
         return series

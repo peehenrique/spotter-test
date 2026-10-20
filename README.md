@@ -36,7 +36,7 @@ Origin, destination, departure date and time, load weight, and a weather sample 
 1. Nominatim geocodes a place only when the request has no coordinates.
 2. OSRM returns up to three driving routes. If the engine offers fewer than three lines at least 3 miles apart, the server asks again through via points on both sides, before and after the midpoint.
 3. Checkpoints are placed every N miles along the road geometry, including the destination. Arrival time at each checkpoint follows OSRM's segment durations.
-4. Open-Meteo supplies hourly wind (mph), liquid rain (inches), and snowfall (centimeters, converted to inches) for the hour the truck is expected to be there.
+4. Open-Meteo supplies hourly wind (mph), liquid rain (inches), and snowfall (inches, because `precipitation_unit` is `inch`) for the hour the truck is expected to be there.
 5. Each checkpoint takes the worst of wind, rain, and snow. Load rules can raise the wind level before that comparison.
 6. Miles between two checkpoints count as the worse of the two samples.
 7. Routes are ordered by fewest severe miles, then fewest high miles, then lowest distance-weighted average risk, then shortest travel time. No-travel miles are not a separate key; they raise the average, where no-travel is 5.
