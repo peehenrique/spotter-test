@@ -729,9 +729,20 @@ input[type="number"] {
 
 input[type="range"] { width: 100%; accent-color: var(--blue); }
 
-.legend { flex-wrap: wrap; gap: 6px 8px; color: var(--muted); font-size: 10px; }
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 10px;
+}
 
-.legend span { display: inline-flex; align-items: center; gap: 4px; }
+.legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+}
 
 .legend i, .tag i, .stage i, .status-pill i {
   display: inline-block;
