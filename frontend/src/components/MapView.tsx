@@ -200,14 +200,6 @@ export function MapView({ plan, selectedId, hour, focus, onSelectRoute }: MapVie
     const route = plan.routes.find((item) => item.id === selected);
     if (!route || route.geometry.length === 0) return;
     const bounds = L.latLngBounds(route.geometry.map(([lon, lat]) => [lat, lon] as [number, number]));
-    if (!bounds.isValid()) return;
-    const narrow = window.innerWidth <= 1180;
-    map.flyToBounds(bounds, {
-      paddingTopLeft: narrow ? [28, 28] : [430, 80],
-      paddingBottomRight: narrow ? [28, 28] : [360, 300],
-      duration: 0.7,
-      maxZoom: 9,
-    });
     clearRouteBadge();
     const latlngs = route.geometry.map(([lon, lat]) => [lat, lon] as [number, number]);
     const marker = L.marker(along(latlngs, 0.5), {
@@ -222,6 +214,16 @@ export function MapView({ plan, selectedId, hour, focus, onSelectRoute }: MapVie
       }),
     }).addTo(map);
     badgeRef.current = marker;
+    document.documentElement.dataset.badge = "shown";
+    if (bounds.isValid()) {
+      const narrow = window.innerWidth <= 1180;
+      map.flyToBounds(bounds, {
+        paddingTopLeft: narrow ? [28, 28] : [430, 80],
+        paddingBottomRight: narrow ? [28, 28] : [360, 300],
+        duration: 0.7,
+        maxZoom: 9,
+      });
+    }
     badgeTimer.current = window.setTimeout(() => {
       marker.getElement()?.classList.add("route-badge-out");
       badgeTimer.current = window.setTimeout(() => {
