@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { Checkpoint, PlanResponse, RouteOption } from "../types";
 import { formatPounds, formatShortStamp, shortPlace } from "../format";
 import { RISK_COLOR, RISK_NAME } from "../risk";
-import { IconBox, IconExpand, IconFlag, IconInfo, IconMoon, IconSun } from "./icons";
+import { IconBox, IconFlag, IconMoon, IconSun } from "./icons";
 
 interface TimelineCardProps {
   plan: PlanResponse | null;
@@ -34,17 +34,6 @@ export function TimelineCard({ plan, route, onFocus }: TimelineCardProps) {
     <section className="panel timeline" aria-label="Delivery timeline">
       <header className="panel-head">
         <h2>Delivery timeline</h2>
-        <button
-          type="button"
-          className="icon-btn"
-          title={plan?.recommendation_reason ?? "Checkpoint schedule"}
-          aria-label="Why this route"
-        >
-          <IconInfo />
-        </button>
-        <span className="icon-btn end" aria-hidden="true">
-          <IconExpand />
-        </span>
       </header>
       <div className="track">
         {(track.length > 0 ? track : PLACEHOLDER_TRACK).map((index, position) => {
