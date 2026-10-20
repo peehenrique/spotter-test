@@ -27,6 +27,8 @@ export function MapView({ plan, selectedId, hour, focus, onSelectRoute }: MapVie
   const corridorRef = useRef<CorridorCanvasLayer | null>(null);
   const routesRef = useRef<L.LayerGroup | null>(null);
   const onSelectRef = useRef(onSelectRoute);
+  const framedPlan = useRef<PlanResponse | null>(null);
+  const framedRoute = useRef<string | null>(null);
   onSelectRef.current = onSelectRoute;
 
   useEffect(() => {
@@ -78,12 +80,26 @@ export function MapView({ plan, selectedId, hour, focus, onSelectRoute }: MapVie
         L.polyline(latlngs, { color: "#083238", weight: 11, opacity: 0.95, interactive: false }).addTo(group);
       }
       const line = L.polyline(latlngs, {
+        className: active ? "route-active" : "route-idle",
         color: routeColor(plan, route.id, active),
-        weight: active ? 6 : 4,
-        opacity: active ? 1 : 0.95,
+        weight: active ? 7 : 3,
+        opacity: active ? 1 : 0.4,
       });
       line.on("click", () => onSelectRef.current(route.id));
       line.addTo(group);
+      if (active) {
+        L.marker(along(latlngs, 0.5), {
+          interactive: false,
+          keyboard: false,
+          zIndexOffset: 700,
+          icon: L.divIcon({
+            className: "route-badge",
+            html: `<span>${escapeHtml(route.label)}</span>`,
+            iconSize: [96, 28],
+            iconAnchor: [48, 14],
+          }),
+        }).addTo(group);
+      }
       if (!active && selectedRoute) {
         const delta = Math.round((route.duration_seconds - selectedRoute.duration_seconds) / 60);
         if (delta !== 0) {
@@ -107,11 +123,12 @@ export function MapView({ plan, selectedId, hour, focus, onSelectRoute }: MapVie
       const active = route.id === selected;
       for (const checkpoint of route.checkpoints) {
         const marker = L.circleMarker([checkpoint.lat, checkpoint.lon], {
-          radius: active ? 5.5 : 3.5,
+          radius: active ? 6 : 3,
           color: "#ffffff",
-          weight: 2,
+          weight: active ? 2 : 1,
+          opacity: active ? 1 : 0.35,
           fillColor: RISK_COLOR[checkpoint.risk],
-          fillOpacity: active ? 1 : 0.8,
+          fillOpacity: active ? 1 : 0.3,
         });
         marker.bindTooltip(`${Math.round(checkpoint.distance_miles)} mi · ${RISK_NAME[checkpoint.risk]}`, {
           direction: "top",
@@ -165,6 +182,30 @@ export function MapView({ plan, selectedId, hour, focus, onSelectRoute }: MapVie
       map.fitBounds(bounds, { paddingTopLeft: [430, 72], paddingBottomRight: [360, 320] });
     }
   }, [plan]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !plan) return;
+    const selected = selectedId ?? plan.recommended_route_id;
+    if (framedPlan.current !== plan) {
+      framedPlan.current = plan;
+      framedRoute.current = selected;
+      return;
+    }
+    if (framedRoute.current === selected) return;
+    framedRoute.current = selected;
+    const route = plan.routes.find((item) => item.id === selected);
+    if (!route || route.geometry.length === 0) return;
+    const bounds = L.latLngBounds(route.geometry.map(([lon, lat]) => [lat, lon] as [number, number]));
+    if (!bounds.isValid()) return;
+    const narrow = window.innerWidth <= 1180;
+    map.flyToBounds(bounds, {
+      paddingTopLeft: narrow ? [28, 28] : [430, 80],
+      paddingBottomRight: narrow ? [28, 28] : [360, 300],
+      duration: 0.7,
+      maxZoom: 9,
+    });
+  }, [plan, selectedId]);
 
   useEffect(() => {
     corridorRef.current?.setFrame(plan?.corridor.points ?? [], hour);

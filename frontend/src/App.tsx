@@ -90,6 +90,11 @@ export function App() {
     });
   }
 
+  function selectRoute(routeId: string) {
+    setSelectedId(routeId);
+    setFocus(null);
+  }
+
   const selected = selectedRoute(plan, selectedId);
   const hours = plan?.corridor.hours ?? [];
   const maxHour = Math.max(hours.length - 1, 0);
@@ -101,7 +106,7 @@ export function App() {
       <div className={plan && selected ? "canvas" : "canvas no-dock"}>
         {loading && <div className="progress" role="progressbar" aria-label="Planning trip" />}
         <div className="map-frame">
-          <MapView plan={plan} selectedId={selectedId} hour={hour} focus={focus} onSelectRoute={setSelectedId} />
+          <MapView plan={plan} selectedId={selectedId} hour={hour} focus={focus} onSelectRoute={selectRoute} />
         </div>
         <div className="overlay">
           <section className="panel planner" aria-label="Routes available">
@@ -145,7 +150,7 @@ export function App() {
             )}
             <div className="load-scroll">
               {plan && selectedId ? (
-                <RoutePanel plan={plan} selectedId={selectedId} onSelect={setSelectedId} />
+                <RoutePanel plan={plan} selectedId={selectedId} onSelect={selectRoute} />
               ) : (
                 <div className="empty-routes">
                   <p className="section-label">Recommended</p>
