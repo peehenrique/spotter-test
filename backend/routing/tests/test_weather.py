@@ -29,6 +29,19 @@ class OpenMeteoParserTests(SimpleTestCase):
         series = parse_open_meteo(payload, 1)
         self.assertEqual(series[0].wind_mph, [12])
 
+    def test_liquid_rain_is_used_when_precipitation_also_includes_snow(self):
+        payload = {
+            "hourly": {
+                "time": ["2026-10-20T14:00"],
+                "wind_speed_10m": [10],
+                "precipitation": [0.4],
+                "rain": [0.05],
+                "snowfall": [2.54],
+            }
+        }
+        series = parse_open_meteo(payload, 1)
+        self.assertEqual(series[0].rain_in_hr, [0.05])
+
     def test_multiple_locations_are_a_list(self):
         hourly = {
             "time": ["2026-10-20T14:00"],

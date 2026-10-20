@@ -42,7 +42,7 @@ class WeatherClient:
         params = {
             "latitude": ",".join("%.2f" % point.lat for point in points),
             "longitude": ",".join("%.2f" % point.lon for point in points),
-            "hourly": "wind_speed_10m,precipitation,snowfall",
+            "hourly": "wind_speed_10m,rain,snowfall",
             "wind_speed_unit": "mph",
             "precipitation_unit": "inch",
             "timezone": "UTC",
@@ -91,7 +91,7 @@ def parse_open_meteo(payload: dict | list, count: int) -> list[HourlySeries]:
         hourly = item.get("hourly") or {}
         times = hourly.get("time") or []
         wind = hourly.get("wind_speed_10m") or []
-        rain = hourly.get("precipitation") or []
+        rain = _rain_series(hourly, len(times))
         snow = hourly.get("snowfall") or []
         if not times or not (len(times) == len(wind) == len(rain) == len(snow)):
             raise PlanError("The weather service left out hourly wind, rain, or snow.")
@@ -104,6 +104,14 @@ def parse_open_meteo(payload: dict | list, count: int) -> list[HourlySeries]:
             )
         )
     return series
+
+
+def _rain_series(hourly: dict, count: int) -> list:
+    """Liquid rain. Fall back to total precipitation when the rain series is missing."""
+    rain = hourly.get("rain")
+    if isinstance(rain, list) and len(rain) == count:
+        return rain
+    return hourly.get("precipitation") or []
 
 
 def reading_at(series: HourlySeries, moment: datetime, time_index: dict[str, int] | None = None) -> tuple[float, float, float]:

@@ -687,6 +687,27 @@ input[type="number"] {
 .hazard-mark.warn { background: #ffb020; }
 .hazard-mark.mid { background: #7d8cff; }
 
+.forecast-dock {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: end;
+  justify-self: center;
+  width: min(520px, 100%);
+  z-index: 2;
+  padding: 10px 14px 12px;
+  display: grid;
+  gap: 6px;
+}
+
+.forecast-scale {
+  display: flex;
+  justify-content: space-between;
+  margin-top: -2px;
+  color: var(--muted);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}
+
 .forecast { display: grid; gap: 6px; }
 
 .forecast-copy { justify-content: space-between; gap: 8px; font-size: 12px; }

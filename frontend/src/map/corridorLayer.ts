@@ -2,6 +2,7 @@ import L from "leaflet";
 import type { CorridorPoint } from "../types";
 
 const RISK_FILL: Record<number, string> = {
+  1: "rgba(61, 204, 151, 0.28)",
   2: "rgba(240, 176, 64, 0.34)",
   3: "rgba(245, 130, 40, 0.42)",
   4: "rgba(255, 72, 84, 0.5)",

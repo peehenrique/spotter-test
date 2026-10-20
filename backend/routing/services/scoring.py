@@ -45,18 +45,16 @@ def summarize(checkpoints: list[tuple[float, RiskLevel]]) -> Summary:
 
 
 def rank_routes(routes: list[T]) -> list[T]:
-    """Prefer fewer no-travel miles, then severe, then high, then lower average risk, then time.
+    """Prefer fewest severe miles, then fewest high miles, then lowest average risk, then time.
 
-    The brief lists severe miles ahead of high miles, average risk, and travel time.
-    No-travel is worse than severe, so those miles are the first key.
+    No-travel miles are not their own key. They still raise average risk, where no-travel is 5.
     """
     return sorted(routes, key=_score_key)
 
 
-def _score_key(route: T) -> tuple[float, float, float, float, float, str]:
+def _score_key(route: T) -> tuple[float, float, float, float, str]:
     summary = route.summary
     return (
-        round(summary.no_travel_miles, 3),
         round(summary.severe_miles, 3),
         round(summary.high_miles, 3),
         round(summary.average_risk, 4),

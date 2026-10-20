@@ -103,9 +103,7 @@ def _targets(total_miles: float, interval_miles: float) -> list[float]:
         return [0.0]
     targets = [0.0]
     cursor = interval_miles
-    # Keep the destination, but don't add another sample a few miles before it.
-    tail = max(1.0, interval_miles * 0.35)
-    while cursor < total_miles - tail:
+    while cursor < total_miles - 1e-6:
         targets.append(cursor)
         cursor += interval_miles
     if total_miles - targets[-1] > 1e-6:

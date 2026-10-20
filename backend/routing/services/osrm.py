@@ -1,18 +1,27 @@
 from __future__ import annotations
 
 import logging
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 
 import requests
 
 from routing.services.errors import PlanError
-from routing.services.geo import Point, bearing_degrees, coordinates_to_points, cumulative_miles, destination, point_at_distance
+from routing.services.geo import (
+    Point,
+    bearing_degrees,
+    coordinates_to_points,
+    cumulative_miles,
+    destination,
+    haversine_miles,
+    point_at_distance,
+)
 from routing.services.geocoding import USER_AGENT
 from routing.services.sampling import separation_miles
 
 logger = logging.getLogger(__name__)
 
-SIMILAR_ROUTE_MILES = 8.0
+SIMILAR_ROUTE_MILES = 3.0
 
 
 @dataclass(frozen=True)
@@ -38,17 +47,29 @@ class OsrmClient:
                 return unique
         if not unique:
             raise PlanError("No drivable route was found between those points.", status=400)
-        for via in via_candidates(unique[0]):
-            try:
-                extra = self._fetch([origin, via, destination], alternatives=0)
-            except PlanError as exc:
-                logger.info("Skipping a via-point route: %s", exc)
-                continue
-            for route in extra:
+        candidates = via_candidates(unique[0])
+        for start in range(0, len(candidates), 4):
+            for route in self._fetch_vias(origin, destination, candidates[start : start + 4]):
                 _add_unique(unique, route)
                 if len(unique) == 3:
                     return unique
         return unique
+
+    def _fetch_vias(self, origin: Point, destination: Point, vias: list[Point]) -> list[RawRoute]:
+        if not vias:
+            return []
+
+        def one(via: Point) -> list[RawRoute]:
+            try:
+                return self._fetch([origin, via, destination], alternatives=0)
+            except PlanError as exc:
+                logger.info("Skipping a via-point route: %s", exc)
+                return []
+
+        workers = min(4, len(vias))
+        with ThreadPoolExecutor(max_workers=workers) as pool:
+            parts = list(pool.map(one, vias))
+        return [route for part in parts for route in part]
 
     def _fetch(self, points: list[Point], alternatives: int) -> list[RawRoute]:
         coords = ";".join("%.6f,%.6f" % (point.lon, point.lat) for point in points)
@@ -122,23 +143,30 @@ def _parse_route(route: dict) -> RawRoute | None:
 
 
 def via_candidates(route: RawRoute) -> list[Point]:
+    """Points off the primary line, including before and after the midpoint.
+
+    Far offsets are listed first so a third corridor is found before the nearer tries.
+    """
     points = coordinates_to_points(route.coordinates)
     cumulative = cumulative_miles(points)
     total = cumulative[-1]
     if total <= 0:
         return []
-    midpoint = point_at_distance(points, cumulative, total * 0.5)
-    before = point_at_distance(points, cumulative, total * 0.45)
-    after = point_at_distance(points, cumulative, total * 0.55)
-    bearing = bearing_degrees(before, after)
-    offset = min(80.0, max(15.0, total * 0.2))
-    wider = min(120.0, offset * 1.8)
-    return [
-        destination(midpoint, bearing - 90, offset),
-        destination(midpoint, bearing + 90, offset),
-        destination(midpoint, bearing - 90, wider),
-        destination(midpoint, bearing + 90, wider),
-    ]
+    far = min(90.0, max(18.0, total * 0.22))
+    near = min(40.0, max(8.0, total * 0.1))
+    found: list[Point] = []
+    for fraction in (0.33, 0.5, 0.67):
+        center = point_at_distance(points, cumulative, total * fraction)
+        before = point_at_distance(points, cumulative, max(0.0, total * fraction - 2))
+        after = point_at_distance(points, cumulative, min(total, total * fraction + 2))
+        if haversine_miles(before, after) < 0.05:
+            bearing = 90.0
+        else:
+            bearing = bearing_degrees(before, after)
+        for miles in (far, near):
+            found.append(destination(center, bearing - 90, miles))
+            found.append(destination(center, bearing + 90, miles))
+    return found
 
 
 def _add_unique(routes: list[RawRoute], candidate: RawRoute) -> None:

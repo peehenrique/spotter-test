@@ -37,4 +37,4 @@ class RankingTests(SimpleTestCase):
         calmer = self._route("calmer", 0, 0, 9, 1.5, 900)
         faster = self._route("faster", 0, 0, 9, 1.5, 400)
         ordered = [route.id for route in rank_routes([no_travel, severe, high, calmer, faster])]
-        self.assertEqual(ordered, ["faster", "calmer", "high", "severe", "no-travel"])
+        self.assertEqual(ordered, ["no-travel", "faster", "calmer", "high", "severe"])

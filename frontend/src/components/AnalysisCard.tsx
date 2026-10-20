@@ -7,25 +7,61 @@ import { IconArrowUp } from "./icons";
 interface AnalysisCardProps {
   plan: PlanResponse | null;
   route: RouteOption | null;
+}
+
+export function ForecastSlider({
+  hours,
+  hour,
+  maxHour,
+  onHour,
+}: {
+  hours: string[];
   hour: number;
   maxHour: number;
   onHour: (hour: number) => void;
-}
-
-export function AnalysisCard({ plan, route, hour, maxHour, onHour }: AnalysisCardProps) {
-  const [open, setOpen] = useState(false);
-  const hours = plan?.corridor.hours ?? [];
+}) {
   const stamp = hours[hour];
   const hourLabel = stamp ? formatForecastHour(stamp, hour) : "0–48h after departure";
+  return (
+    <section className="panel forecast-dock" aria-label="Corridor forecast">
+      <div className="forecast-copy">
+        <strong>Corridor forecast</strong>
+        <span className="forecast-hour">{hourLabel}</span>
+      </div>
+      <input
+        type="range"
+        min={0}
+        max={maxHour}
+        step={1}
+        value={Math.min(hour, maxHour)}
+        aria-label={`Forecast hour from 0 to ${maxHour}`}
+        aria-valuemin={0}
+        aria-valuemax={maxHour}
+        aria-valuenow={Math.min(hour, maxHour)}
+        onChange={(event) => onHour(Number(event.target.value))}
+      />
+      <div className="forecast-scale">
+        <span>0h</span>
+        <span>{maxHour}h</span>
+      </div>
+      <div className="legend">
+        {(Object.keys(RISK_NAME) as (keyof typeof RISK_NAME)[]).map((label) => (
+          <span key={label}>
+            <i style={{ background: RISK_COLOR[label] }} />
+            {RISK_NAME[label]}
+          </span>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+export function AnalysisCard({ plan, route }: AnalysisCardProps) {
+  const [open, setOpen] = useState(false);
   const summary = route?.summary;
   const headline = route
     ? `${formatMiles(route.distance_miles)} · ${formatDuration(route.duration_seconds)} · risk ${summary?.average_risk.toFixed(2)}`
     : "Plan a trip to score the route";
-
-  function stepHour() {
-    if (!plan) return;
-    onHour(hour >= maxHour ? 0 : hour + 1);
-  }
 
   return (
     <section className={open ? "panel analysis open" : "panel analysis"} aria-label="AI route analysis">
@@ -61,32 +97,6 @@ export function AnalysisCard({ plan, route, hour, maxHour, onHour }: AnalysisCar
             <Hazard tone="bad" value={summary ? miles(summary.no_travel_miles) : "—"} label="No go" />
             <Hazard tone="warn" value={summary ? miles(summary.severe_miles) : "—"} label="Severe" />
             <Hazard tone="mid" value={summary ? miles(summary.high_miles) : "—"} label="High" />
-          </div>
-          <div className="forecast">
-            <div className="forecast-copy">
-              <strong>Corridor forecast</strong>
-              <button type="button" className="text-btn" onClick={stepHour} disabled={!plan}>
-                Next hour
-              </button>
-            </div>
-            <span className="forecast-hour">{hourLabel}</span>
-            <input
-              type="range"
-              min={0}
-              max={maxHour}
-              value={Math.min(hour, maxHour)}
-              disabled={!plan}
-              aria-label="Forecast hour"
-              onChange={(event) => onHour(Number(event.target.value))}
-            />
-            <div className="legend">
-              {(Object.keys(RISK_NAME) as (keyof typeof RISK_NAME)[]).map((label) => (
-                <span key={label}>
-                  <i style={{ background: RISK_COLOR[label] }} />
-                  {RISK_NAME[label]}
-                </span>
-              ))}
-            </div>
           </div>
         </div>
       )}

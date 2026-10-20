@@ -271,11 +271,10 @@ def _rounded_buckets(summary: Summary, total_miles: float) -> dict[str, float]:
 def _reason(route: _ScoredRoute) -> str:
     buckets = _rounded_buckets(route.summary, route.distance_miles)
     return (
-        "%s ranks first with %.1f no-travel miles, %.1f severe miles, %.1f high miles, "
+        "%s ranks first with %.1f severe miles, %.1f high miles, "
         "average risk %.2f, and %s of travel."
         % (
             route.label,
-            buckets["no_travel_miles"],
             buckets["severe_miles"],
             buckets["high_miles"],
             route.summary.average_risk,

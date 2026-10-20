@@ -7,7 +7,7 @@ import { RoutePanel } from "./components/RoutePanel";
 import { MapView } from "./components/MapView";
 import { TopNav } from "./components/TopNav";
 import { DisclaimerModal } from "./components/DisclaimerModal";
-import { AnalysisCard } from "./components/AnalysisCard";
+import { AnalysisCard, ForecastSlider } from "./components/AnalysisCard";
 import { TimelineCard } from "./components/TimelineCard";
 import { StatusCard } from "./components/StatusCard";
 import { IconClose, IconExpand } from "./components/icons";
@@ -166,15 +166,17 @@ export function App() {
             <h2>Shipment route overview</h2>
             <p>{selected ? `Distance: ${formatMiles(selected.distance_miles)}` : "Distance: —"}</p>
           </header>
+          {plan && (
+            <ForecastSlider
+              hours={hours}
+              hour={Math.min(hour, maxHour)}
+              maxHour={maxHour}
+              onHour={setHour}
+            />
+          )}
           {plan && selected && (
             <>
-              <AnalysisCard
-                plan={plan}
-                route={selected}
-                hour={Math.min(hour, maxHour)}
-                maxHour={maxHour}
-                onHour={setHour}
-              />
+              <AnalysisCard plan={plan} route={selected} />
               <TimelineCard
                 plan={plan}
                 route={selected}

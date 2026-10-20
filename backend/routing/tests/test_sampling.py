@@ -1,5 +1,6 @@
 from django.test import SimpleTestCase
 
+from routing.services.geo import Point, destination
 from routing.services.sampling import sample_polyline
 
 
@@ -29,6 +30,19 @@ class SamplingTests(SimpleTestCase):
         self.assertAlmostEqual(samples[-1].distance_miles, 100, delta=0.1)
         halfway = next(sample for sample in samples if abs(sample.distance_miles - 50) < 0.1)
         self.assertAlmostEqual(halfway.elapsed_seconds, 500, delta=1)
+
+    def test_interval_is_kept_when_the_next_mark_is_near_the_destination(self):
+        end = destination(Point(0.0, 0.0), 0, 60)
+        samples = sample_polyline(
+            [(0.0, 0.0), (end.lon, end.lat)],
+            None,
+            None,
+            total_duration_seconds=3600,
+            interval_miles=50,
+        )
+        distances = [sample.distance_miles for sample in samples]
+        self.assertTrue(any(abs(distance - 50) < 0.2 for distance in distances), distances)
+        self.assertAlmostEqual(distances[-1], 60, delta=0.2)
 
     def test_short_route_still_includes_the_destination(self):
         coordinates = [(0.0, 0.0), (0.05, 0.0)]
