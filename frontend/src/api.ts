@@ -1,7 +1,11 @@
 import type { Place, PlanPayload, PlanResponse } from "./types";
 
+const apiBase = (import.meta.env.VITE_API_URL ?? "").replace(/\/$/, "");
+
 export async function geocode(query: string): Promise<Place[]> {
-  const response = await fetch(`/api/geocode/?q=${encodeURIComponent(query)}`);
+  const response = await fetch(
+    `${apiBase}/api/geocode/?q=${encodeURIComponent(query)}`,
+  );
   if (!response.ok) {
     return [];
   }
@@ -10,7 +14,7 @@ export async function geocode(query: string): Promise<Place[]> {
 }
 
 export async function planTrip(payload: PlanPayload): Promise<PlanResponse> {
-  const response = await fetch("/api/plan/", {
+  const response = await fetch(`${apiBase}/api/plan/`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
