@@ -189,13 +189,9 @@ export function MapView({ plan, selectedId, hour, focus, onSelectRoute }: MapVie
       framedPlan.current = plan;
       framedRoute.current = selected;
       clearRouteBadge();
-      document.documentElement.dataset.badge = "new-plan";
       return;
     }
-    if (framedRoute.current === selected) {
-      document.documentElement.dataset.badge = "same";
-      return;
-    }
+    if (framedRoute.current === selected) return;
     framedRoute.current = selected;
     const route = plan.routes.find((item) => item.id === selected);
     if (!route || route.geometry.length === 0) return;
@@ -214,7 +210,6 @@ export function MapView({ plan, selectedId, hour, focus, onSelectRoute }: MapVie
       }),
     }).addTo(map);
     badgeRef.current = marker;
-    document.documentElement.dataset.badge = "shown";
     if (bounds.isValid()) {
       const narrow = window.innerWidth <= 1180;
       map.flyToBounds(bounds, {
