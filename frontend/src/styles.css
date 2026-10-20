@@ -347,6 +347,8 @@ button.icon-btn:hover { background: rgba(255, 255, 255, 0.06); color: var(--ink)
 input[type="datetime-local"],
 input[type="number"] {
   width: 100%;
+  min-width: 0;
+  max-width: 100%;
   border: 0;
   background: #0c1c24;
   border: 1px solid var(--line);
@@ -358,7 +360,16 @@ input[type="number"] {
 
 .field input:focus { box-shadow: 0 0 0 2px rgba(46, 201, 192, 0.35); }
 
-.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.form-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 112px;
+  gap: 8px;
+}
+
+.form-row input[type="datetime-local"] {
+  font-size: 13px;
+  padding-inline: 8px;
+}
 
 .suggestions {
   list-style: none;
