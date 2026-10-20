@@ -1,11 +1,15 @@
 import { useState } from "react";
 import { planTrip } from "./api";
-import { defaultDeparture, formatForecastHour, toIso } from "./format";
-import type { PlaceDraft, PlanResponse } from "./types";
-import { RISK_COLOR, RISK_NAME } from "./risk";
+import { defaultDeparture, formatMiles, placeCode, shortPlace, toIso } from "./format";
+import type { PlaceDraft, PlanResponse, RouteOption } from "./types";
 import { TripForm } from "./components/TripForm";
 import { RoutePanel } from "./components/RoutePanel";
 import { MapView } from "./components/MapView";
+import { IconRail } from "./components/IconRail";
+import { AnalysisCard } from "./components/AnalysisCard";
+import { TimelineCard } from "./components/TimelineCard";
+import { StatusCard } from "./components/StatusCard";
+import { IconClose, IconExpand, LogoMark } from "./components/icons";
 
 const SAMPLE = {
   origin: { label: "Chicago, IL", lat: 41.8781, lon: -87.6298 },
@@ -28,6 +32,7 @@ export function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [focus, setFocus] = useState<{ lat: number; lon: number; token: number } | null>(null);
+  const [composerOpen, setComposerOpen] = useState(true);
 
   async function submit(next?: {
     origin: PlaceDraft;
@@ -59,8 +64,10 @@ export function App() {
       setPlan(result);
       setSelectedId(result.recommended_route_id);
       setHour(0);
+      setComposerOpen(false);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Could not plan the trip.");
+      setComposerOpen(true);
     } finally {
       setLoading(false);
     }
@@ -82,82 +89,111 @@ export function App() {
     });
   }
 
+  const selected = selectedRoute(plan, selectedId);
   const hours = plan?.corridor.hours ?? [];
-  const hourLabel = hours[hour] ? formatForecastHour(hours[hour], hour) : "Departure";
+  const maxHour = Math.max(hours.length - 1, 0);
 
   return (
-    <div className="app">
-      <header className="topbar">
-        <div className="brand">
-          <span className="mark" aria-hidden="true" />
-          <div>
-            <p className="eyebrow">Truck routing</p>
-            <h1>Weather-Aware Truck Routing</h1>
-          </div>
-        </div>
-        <p className="topbar-note">Three routes, scored by weather, load, and time.</p>
-      </header>
-      <div className="workspace">
-        <aside className="sidebar">
-          <TripForm
-            origin={origin}
-            destination={destination}
-            departure={departure}
-            load={load}
-            interval={interval}
-            loading={loading}
-            error={error}
-            onOrigin={setOrigin}
-            onDestination={setDestination}
-            onDeparture={setDeparture}
-            onLoad={setLoad}
-            onInterval={setInterval}
-            onSubmit={() => void submit()}
-            onSample={runSample}
-          />
-          {plan && selectedId && (
-            <RoutePanel
-              plan={plan}
-              selectedId={selectedId}
-              onSelect={setSelectedId}
-              onFocusCheckpoint={(lat, lon) => setFocus({ lat, lon, token: Date.now() })}
-            />
-          )}
-        </aside>
-        <main className="map-stage">
-          {loading && <div className="progress" />}
-          {!plan && (
-            <div className="map-empty">
-              <p>Plan a trip to compare routes on the map.</p>
-            </div>
-          )}
+    <div className="shell">
+      <IconRail />
+      <div className="canvas">
+        {loading && <div className="progress" role="progressbar" aria-label="Planning trip" />}
+        <div className="map-frame">
           <MapView plan={plan} selectedId={selectedId} hour={hour} focus={focus} onSelectRoute={setSelectedId} />
-          <div className="forecast">
-            <div className="forecast-copy">
-              <strong>Corridor forecast</strong>
-              <span>{plan ? hourLabel : "0–48h after departure"}</span>
+        </div>
+        <div className="overlay">
+          <section className="panel planner" aria-label="Routes available">
+            <header className="panel-head">
+              <LogoMark size={26} />
+              <h2>Routes available</h2>
+              {plan && <span className="count-pill">{plan.routes.length}</span>}
+              <button
+                type="button"
+                className="icon-btn end"
+                aria-label={composerOpen ? "Hide trip form" : "Edit trip"}
+                aria-expanded={composerOpen}
+                onClick={() => setComposerOpen((open) => !open)}
+              >
+                <IconExpand />
+              </button>
+            </header>
+            {composerOpen || !plan ? (
+              <TripForm
+                origin={origin}
+                destination={destination}
+                departure={departure}
+                load={load}
+                interval={interval}
+                loading={loading}
+                error={error}
+                onOrigin={setOrigin}
+                onDestination={setDestination}
+                onDeparture={setDeparture}
+                onLoad={setLoad}
+                onInterval={setInterval}
+                onSubmit={() => void submit()}
+                onSample={runSample}
+              />
+            ) : (
+              <div className="chips">
+                <Chip label={shortPlace(origin.label) || placeCode(origin.label)} onClick={() => setComposerOpen(true)} />
+                <Chip label={shortPlace(destination.label)} onClick={() => setComposerOpen(true)} />
+                <Chip label={`${Number(load).toLocaleString()} lb`} onClick={() => setComposerOpen(true)} />
+                <Chip label={`${interval} mi`} onClick={() => setComposerOpen(true)} />
+              </div>
+            )}
+            <div className="load-scroll">
+              {plan && selectedId ? (
+                <RoutePanel plan={plan} selectedId={selectedId} onSelect={setSelectedId} />
+              ) : (
+                <div className="empty-routes">
+                  <p className="section-label">Recommended</p>
+                  <div className="empty-card">
+                    <strong>No routes yet</strong>
+                    <p>Enter an origin, destination, departure, and load. Sample trip uses Chicago to Kansas City.</p>
+                  </div>
+                </div>
+              )}
             </div>
-            <input
-              type="range"
-              min={0}
-              max={Math.max(hours.length - 1, 48)}
-              value={Math.min(hour, Math.max(hours.length - 1, 0))}
-              disabled={!plan}
-              aria-label="Forecast hour"
-              onChange={(event) => setHour(Number(event.target.value))}
-            />
-            <div className="legend">
-              {(Object.keys(RISK_NAME) as (keyof typeof RISK_NAME)[]).map((label) => (
-                <span key={label}>
-                  <i style={{ background: RISK_COLOR[label] }} />
-                  {RISK_NAME[label]}
-                </span>
-              ))}
-            </div>
-          </div>
-        </main>
+          </section>
+          <header className="map-heading">
+            <h2>Shipment route overview</h2>
+            <p>{selected ? `Distance: ${formatMiles(selected.distance_miles)}` : "Distance: —"}</p>
+          </header>
+          <AnalysisCard
+            plan={plan}
+            route={selected}
+            hour={Math.min(hour, maxHour)}
+            maxHour={plan ? maxHour : 48}
+            onHour={setHour}
+          />
+          <TimelineCard
+            plan={plan}
+            route={selected}
+            onFocus={(lat, lon) => setFocus({ lat, lon, token: Date.now() })}
+          />
+          <StatusCard plan={plan} route={selected} />
+        </div>
       </div>
     </div>
+  );
+}
+
+function Chip({ label, onClick }: { label: string; onClick: () => void }) {
+  return (
+    <button type="button" className="chip" onClick={onClick}>
+      {label}
+      <IconClose />
+    </button>
+  );
+}
+
+function selectedRoute(plan: PlanResponse | null, selectedId: string | null): RouteOption | null {
+  if (!plan) return null;
+  return (
+    plan.routes.find((route) => route.id === selectedId) ??
+    plan.routes.find((route) => route.id === plan.recommended_route_id) ??
+    null
   );
 }
 

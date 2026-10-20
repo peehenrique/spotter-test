@@ -13,6 +13,41 @@ export function formatMiles(miles: number): string {
   })} mi`;
 }
 
+export function formatPounds(pounds: number): string {
+  return `${Math.round(pounds).toLocaleString()} lb`;
+}
+
+export function shortPlace(label: string): string {
+  const parts = label
+    .split(",")
+    .map((part) => part.trim())
+    .filter(Boolean);
+  if (parts.length >= 2) return `${parts[0]}, ${parts[1]}`;
+  return label;
+}
+
+export function placeCode(label: string): string {
+  const city = label.split(",")[0]?.trim() ?? label;
+  const words = city.split(/\s+/).filter(Boolean);
+  if (words.length >= 2) {
+    return `${words[0].slice(0, 1)}${words[1].slice(0, 2)}`.toUpperCase();
+  }
+  const compact = city.replace(/[^a-z0-9]/gi, "").slice(0, 3).toUpperCase();
+  return compact || "—";
+}
+
+export function formatShortStamp(iso: string): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return iso;
+  return date.toLocaleString(undefined, {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+}
+
 export function formatEta(iso: string): string {
   return new Date(iso).toLocaleString(undefined, {
     weekday: "short",

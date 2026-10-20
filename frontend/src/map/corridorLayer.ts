@@ -2,11 +2,11 @@ import L from "leaflet";
 import type { CorridorPoint } from "../types";
 
 const RISK_FILL: Record<number, string> = {
-  1: "rgba(61, 204, 151, 0.42)",
-  2: "rgba(226, 177, 90, 0.48)",
-  3: "rgba(240, 138, 36, 0.55)",
-  4: "rgba(255, 93, 93, 0.62)",
-  5: "rgba(213, 107, 255, 0.68)",
+  1: "rgba(61, 204, 151, 0.2)",
+  2: "rgba(240, 176, 64, 0.3)",
+  3: "rgba(245, 130, 40, 0.4)",
+  4: "rgba(255, 72, 84, 0.46)",
+  5: "rgba(176, 72, 255, 0.42)",
 };
 
 const RADIUS_METERS = 16 * 1609.344;

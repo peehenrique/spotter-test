@@ -44,24 +44,26 @@ export function TripForm({
     >
       <PlaceField label="Origin" value={origin} onChange={onOrigin} />
       <PlaceField label="Destination" value={destination} onChange={onDestination} />
-      <label className="field">
-        <span>Departure</span>
-        <input type="datetime-local" value={departure} onChange={(event) => onDeparture(event.target.value)} required />
-      </label>
-      <label className="field">
-        <span>Load weight (lb)</span>
-        <input
-          type="number"
-          min={1}
-          max={200000}
-          step={1}
-          value={load}
-          onChange={(event) => onLoad(event.target.value)}
-          required
-        />
-      </label>
+      <div className="form-row">
+        <label className="field">
+          <span>Departure</span>
+          <input type="datetime-local" value={departure} onChange={(event) => onDeparture(event.target.value)} required />
+        </label>
+        <label className="field">
+          <span>Load weight</span>
+          <input
+            type="number"
+            min={1}
+            max={200000}
+            step={1}
+            value={load}
+            onChange={(event) => onLoad(event.target.value)}
+            required
+          />
+        </label>
+      </div>
       <div className="field">
-        <span>Weather sample</span>
+        <span>Sample every</span>
         <div className="segmented" role="group" aria-label="Sample interval">
           {([10, 25, 50] as const).map((miles) => (
             <button
@@ -76,9 +78,7 @@ export function TripForm({
           ))}
         </div>
       </div>
-      <p className="hint">
-        Above 30,000 lb, 45–54 mph wind becomes no-travel. Above 40,000 lb, 35–44 mph wind becomes severe.
-      </p>
+      <p className="hint">Above 30,000 lb, 45–54 mph wind is no-travel. Above 40,000 lb, 35–44 mph wind is severe.</p>
       {error && (
         <p className="form-error" role="alert">
           {error}
