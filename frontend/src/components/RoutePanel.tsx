@@ -73,7 +73,7 @@ function LoadCard({
   return (
     <div
       className={active ? "load-card selected" : "load-card"}
-      style={{ borderLeftColor: routeColor(plan, route.id, active) }}
+      style={active ? undefined : { borderLeftColor: routeColor(plan, route.id) }}
       role="button"
       tabIndex={0}
       aria-pressed={active}

@@ -29,15 +29,13 @@ export function StatusCard({ plan, route }: StatusCardProps) {
       </div>
       <div className="status-main">
         <div className="status-head">
-          <div>
-            <h2>Route status</h2>
-            <span className="status-id">{route ? route.label : "No route selected"}</span>
-          </div>
+          <h2>Route status</h2>
           <span className={`status-pill ${tone}`}>
             <i />
             {status}
           </span>
         </div>
+        <span className="status-id">{route ? route.label : "No route selected"}</span>
         <p className="hero-stat">
           {route ? Math.round(route.distance_miles).toLocaleString() : "—"}
           {route && <small> mi</small>}

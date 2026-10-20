@@ -2,14 +2,13 @@ import L from "leaflet";
 import type { CorridorPoint } from "../types";
 
 const RISK_FILL: Record<number, string> = {
-  1: "rgba(61, 204, 151, 0.2)",
-  2: "rgba(240, 176, 64, 0.3)",
-  3: "rgba(245, 130, 40, 0.4)",
-  4: "rgba(255, 72, 84, 0.46)",
-  5: "rgba(176, 72, 255, 0.42)",
+  2: "rgba(240, 176, 64, 0.34)",
+  3: "rgba(245, 130, 40, 0.42)",
+  4: "rgba(255, 72, 84, 0.5)",
+  5: "rgba(176, 72, 255, 0.48)",
 };
 
-const RADIUS_METERS = 16 * 1609.344;
+const RADIUS_METERS = 10 * 1609.344;
 
 export class CorridorCanvasLayer extends L.Layer {
   private points: CorridorPoint[] = [];
@@ -27,15 +26,20 @@ export class CorridorCanvasLayer extends L.Layer {
   onAdd(map: L.Map): this {
     this.map = map;
     const canvas = L.DomUtil.create("canvas", "corridor-canvas") as HTMLCanvasElement;
+    canvas.style.pointerEvents = "none";
     this.canvas = canvas;
     map.getPanes().overlayPane?.appendChild(canvas);
-    map.on("moveend zoomend viewreset resize", this.schedule);
+    map.on("moveend viewreset resize", this.schedule);
+    map.on("zoomstart", this.hideDuringZoom);
+    map.on("zoomend", this.schedule);
     this.schedule();
     return this;
   }
 
   onRemove(map: L.Map): this {
-    map.off("moveend zoomend viewreset resize", this.schedule);
+    map.off("moveend viewreset resize", this.schedule);
+    map.off("zoomstart", this.hideDuringZoom);
+    map.off("zoomend", this.schedule);
     this.canvas?.remove();
     this.canvas = null;
     this.map = null;
@@ -43,6 +47,14 @@ export class CorridorCanvasLayer extends L.Layer {
     this.frame = 0;
     return this;
   }
+
+  private hideDuringZoom = (): void => {
+    if (this.frame) {
+      cancelAnimationFrame(this.frame);
+      this.frame = 0;
+    }
+    if (this.canvas) this.canvas.style.visibility = "hidden";
+  };
 
   private schedule = (): void => {
     if (this.frame) return;
@@ -58,9 +70,13 @@ export class CorridorCanvasLayer extends L.Layer {
     if (!map || !canvas) return;
     const size = map.getSize();
     const dpr = window.devicePixelRatio || 1;
+    const width = Math.max(1, Math.round(size.x * dpr));
+    const height = Math.max(1, Math.round(size.y * dpr));
     L.DomUtil.setPosition(canvas, map.containerPointToLayerPoint([0, 0]));
-    canvas.width = Math.max(1, Math.round(size.x * dpr));
-    canvas.height = Math.max(1, Math.round(size.y * dpr));
+    if (canvas.width !== width || canvas.height !== height) {
+      canvas.width = width;
+      canvas.height = height;
+    }
     canvas.style.width = `${size.x}px`;
     canvas.style.height = `${size.y}px`;
     const context = canvas.getContext("2d");
@@ -70,6 +86,8 @@ export class CorridorCanvasLayer extends L.Layer {
 
     for (const point of this.points) {
       const risk = point.risks[this.hour] ?? 1;
+      const fill = RISK_FILL[risk];
+      if (!fill) continue;
       const center = map.latLngToContainerPoint([point.lat, point.lon]);
       const edge = map.latLngToContainerPoint(offsetEast(point.lat, point.lon, RADIUS_METERS));
       const radius = Math.max(12, center.distanceTo(edge));
@@ -81,14 +99,16 @@ export class CorridorCanvasLayer extends L.Layer {
       ) {
         continue;
       }
-      const gradient = context.createRadialGradient(center.x, center.y, radius * 0.1, center.x, center.y, radius);
-      gradient.addColorStop(0, RISK_FILL[risk] ?? RISK_FILL[1]);
+      const gradient = context.createRadialGradient(center.x, center.y, radius * 0.15, center.x, center.y, radius);
+      gradient.addColorStop(0, fill);
+      gradient.addColorStop(0.55, fill);
       gradient.addColorStop(1, "rgba(0, 0, 0, 0)");
       context.fillStyle = gradient;
       context.beginPath();
       context.arc(center.x, center.y, radius, 0, Math.PI * 2);
       context.fill();
     }
+    canvas.style.visibility = "visible";
   }
 }
 

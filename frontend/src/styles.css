@@ -15,6 +15,7 @@
   --side: 300px;
   --gap: 12px;
   --pad: 14px;
+  --dock: 272px;
 }
 
 * { box-sizing: border-box; }
@@ -87,13 +88,15 @@ button { cursor: pointer; }
 
 .leaflet-container { font-family: inherit; background: #e6e9ee; }
 
+.corridor-canvas { pointer-events: none; }
+
 .overlay {
   position: absolute;
   inset: 0;
   z-index: 600;
   display: grid;
   grid-template-columns: 372px minmax(0, 1fr) var(--side);
-  grid-template-rows: minmax(0, 1fr) minmax(228px, 272px);
+  grid-template-rows: minmax(0, 1fr) minmax(228px, var(--dock));
   gap: var(--gap);
   padding: var(--pad);
   pointer-events: none;
@@ -164,10 +167,19 @@ button { cursor: pointer; }
   grid-row: 2;
   min-height: 0;
   overflow: hidden;
-  padding: 12px;
+  padding: 10px 12px 12px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
+}
+
+.status h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  white-space: nowrap;
 }
 
 .panel-head {
@@ -364,7 +376,21 @@ input[type="number"] {
   cursor: pointer;
 }
 
-.load-card.selected { box-shadow: 0 0 0 2px var(--blue), 0 8px 24px rgba(47, 107, 255, 0.12); }
+.load-card.selected {
+  border: 1px solid #d5e3ff;
+  border-left-width: 1px;
+  background: linear-gradient(180deg, #f4f8ff 0%, #fff 92px);
+  box-shadow: 0 10px 24px rgba(47, 107, 255, 0.1);
+}
+
+.load-card.selected:focus,
+.load-card.selected:focus-visible {
+  outline: none;
+}
+
+.load-card.selected .stats {
+  background: rgba(255, 255, 255, 0.72);
+}
 
 .load-head, .status-head, .forecast-copy, .legend span, .hazard, .lane, .stats {
   display: flex;
@@ -483,7 +509,7 @@ input[type="number"] {
 
 .load-foot .accept { background: var(--ink); color: #fff; }
 
-.load-foot.featured .accept { background: #e7eeff; color: var(--blue); }
+.load-foot.featured .accept { background: #fff; color: var(--blue); }
 
 .truck-art { width: 100%; height: 62px; display: block; }
 
@@ -718,29 +744,32 @@ input[type="range"] { width: 100%; accent-color: var(--blue); }
   color: #fff;
   display: flex;
   justify-content: space-between;
-  padding: 8px 10px;
+  padding: 6px 10px;
   font-size: 11px;
 }
 
 .invoice-lines {
   display: grid;
   grid-template-columns: 1fr auto;
-  gap: 3px 12px;
-  padding: 8px 10px 10px;
+  gap: 2px 12px;
+  padding: 6px 10px 8px;
   font-size: 11px;
   color: #667085;
 }
 
 .invoice-lines b { color: var(--ink); font-weight: 600; }
 
-.status-main { display: flex; flex-direction: column; gap: 4px; min-height: 0; flex: 1; }
+.status-main { display: flex; flex-direction: column; gap: 2px; min-height: 0; flex: 1; }
 
-.status-id { color: var(--muted); font-size: 12px; }
+.status-head { align-items: center; flex: none; }
+
+.status-id { color: var(--muted); font-size: 12px; line-height: 1.2; }
 
 .status-pill {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  flex: none;
   color: #667085;
   font-size: 13px;
   white-space: nowrap;
@@ -752,7 +781,7 @@ input[type="range"] { width: 100%; accent-color: var(--blue); }
 .status-pill.bad i { background: #ef4444; }
 
 .hero-stat {
-  font-size: 32px;
+  font-size: 28px;
   font-weight: 650;
   letter-spacing: -0.04em;
   line-height: 1.1;
@@ -765,17 +794,19 @@ input[type="range"] { width: 100%; accent-color: var(--blue); }
   display: flex;
   justify-content: space-between;
   gap: 12px;
+  flex: none;
+  padding-top: 6px;
 }
 
 .status-dates span { display: block; color: var(--muted); font-size: 12px; }
 
-.status-dates b { font-size: 13px; font-weight: 600; }
+.status-dates b { display: block; font-size: 13px; font-weight: 600; white-space: nowrap; }
 
 .zoom-stack {
   position: absolute;
-  z-index: 500;
-  right: calc(var(--pad) + var(--side) + 10px);
-  top: 46%;
+  z-index: 650;
+  right: calc(var(--pad) + 4px);
+  bottom: calc(var(--dock) + var(--pad) + 16px);
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -879,9 +910,10 @@ button:focus-visible, .load-card:focus-visible, input:focus-visible {
 }
 
 @media (max-height: 820px) {
+  :root { --dock: 248px; }
   .truck-art { display: none; }
-  .overlay { grid-template-rows: minmax(0, 1fr) minmax(200px, 236px); }
-  .leaflet-bottom.leaflet-right { bottom: calc(236px + var(--pad) + 6px); }
+  .overlay { grid-template-rows: minmax(0, 1fr) minmax(200px, var(--dock)); }
+  .leaflet-bottom.leaflet-right { bottom: calc(var(--dock) + var(--pad) + 6px); }
 }
 
 @media (max-width: 1180px) {
