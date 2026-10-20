@@ -8,8 +8,7 @@
 # Variável de build (defina no Easypanel no momento do build):
 # - VITE_API_URL = URL pública do backend, sem barra no final
 #   ex: https://api.seudominio.com
-# Se ficar vazia, o app chama /api no mesmo host e o nginx encaminha
-# para o serviço "backend" (usado pelo docker compose local).
+# O nginx só serve os arquivos estáticos. Ele não procura o host "backend".
 
 FROM node:22-alpine AS build
 
@@ -28,8 +27,10 @@ RUN npm run build
 FROM nginx:1.27-alpine
 
 COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf
+COPY frontend/docker-entrypoint.sh /spotter-entrypoint.sh
+RUN chmod +x /spotter-entrypoint.sh
 COPY --from=build /app/dist /usr/share/nginx/html
 
 EXPOSE 80
 
-CMD ["sh", "-c", "sed -i \"s/listen 80;/listen ${PORT:-80};/\" /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]
+CMD ["/spotter-entrypoint.sh"]
