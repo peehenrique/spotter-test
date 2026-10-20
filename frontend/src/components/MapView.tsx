@@ -171,9 +171,24 @@ export function MapView({ plan, selectedId, hour, focus, onSelectRoute }: MapVie
   }, [plan, hour]);
 
   useEffect(() => {
-    if (!focus || !mapRef.current) return;
-    const zoom = Math.max(mapRef.current.getZoom(), 7);
-    mapRef.current.flyTo([focus.lat, focus.lon], zoom, { duration: 0.55 });
+    const map = mapRef.current;
+    if (!focus || !map) return;
+    const zoom = Math.max(map.getZoom(), 8);
+    map.flyTo([focus.lat, focus.lon], zoom, { duration: 0.55 });
+    const marker = L.marker([focus.lat, focus.lon], {
+      interactive: false,
+      keyboard: false,
+      zIndexOffset: 800,
+      icon: L.divIcon({
+        className: "focus-ring",
+        html: "<span></span>",
+        iconSize: [36, 36],
+        iconAnchor: [18, 18],
+      }),
+    }).addTo(map);
+    return () => {
+      marker.remove();
+    };
   }, [focus]);
 
   return (

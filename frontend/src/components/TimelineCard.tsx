@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Checkpoint, PlanResponse, RouteOption } from "../types";
 import { formatPounds, formatShortStamp, shortPlace } from "../format";
 import { RISK_COLOR, RISK_NAME } from "../risk";
@@ -12,7 +12,9 @@ interface TimelineCardProps {
 
 export function TimelineCard({ plan, route, onFocus }: TimelineCardProps) {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const rowRefs = useRef<Map<number, HTMLButtonElement>>(new Map());
   const checkpoints = route?.checkpoints ?? [];
+  const active = checkpoints.find((checkpoint) => checkpoint.index === activeIndex) ?? null;
 
   useEffect(() => {
     setActiveIndex(null);
@@ -23,6 +25,9 @@ export function TimelineCard({ plan, route, onFocus }: TimelineCardProps) {
   function open(checkpoint: Checkpoint) {
     setActiveIndex(checkpoint.index);
     onFocus(checkpoint.lat, checkpoint.lon);
+    requestAnimationFrame(() => {
+      rowRefs.current.get(checkpoint.index)?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    });
   }
 
   return (
@@ -56,6 +61,7 @@ export function TimelineCard({ plan, route, onFocus }: TimelineCardProps) {
               type="button"
               className={activeIndex === checkpoint.index ? "track-node active" : "track-node"}
               onClick={() => open(checkpoint)}
+              aria-pressed={activeIndex === checkpoint.index}
               aria-label={`${stageName(index, checkpoints.length)} ${formatShortStamp(checkpoint.eta)}`}
             >
               <NodeIcon checkpoint={checkpoint} first={index === 0} last={last} />
@@ -64,6 +70,13 @@ export function TimelineCard({ plan, route, onFocus }: TimelineCardProps) {
           );
         })}
       </div>
+      {plan && active && (
+        <p className="track-selection" role="status">
+          <span>{stageName(active.index, checkpoints.length)}</span>
+          <span>{formatShortStamp(active.eta)}</span>
+          <span>{locationLabel(plan, active, active.index, active.index === checkpoints.length - 1)}</span>
+        </p>
+      )}
       <div className="t-head" aria-hidden="true">
         <span>Stage</span>
         <span>Time</span>
@@ -79,7 +92,12 @@ export function TimelineCard({ plan, route, onFocus }: TimelineCardProps) {
               <button
                 key={checkpoint.index}
                 type="button"
+                ref={(node) => {
+                  if (node) rowRefs.current.set(checkpoint.index, node);
+                  else rowRefs.current.delete(checkpoint.index);
+                }}
                 className={activeIndex === checkpoint.index ? "t-row active" : "t-row"}
+                aria-pressed={activeIndex === checkpoint.index}
                 onClick={() => open(checkpoint)}
               >
                 <span className="stage">
