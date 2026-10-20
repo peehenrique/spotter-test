@@ -899,7 +899,12 @@ input[type="range"] { width: 100%; accent-color: var(--blue); }
 
 .leaflet-bottom.leaflet-right {
   right: calc(var(--side) + var(--pad) + 12px);
-  bottom: calc(272px + var(--pad) + 6px);
+  bottom: calc(var(--dock) + var(--pad) + 6px);
+}
+
+.canvas.no-dock .leaflet-bottom.leaflet-right {
+  right: 8px;
+  bottom: 8px;
 }
 
 .leaflet-popup-content-wrapper, .leaflet-popup-tip {
