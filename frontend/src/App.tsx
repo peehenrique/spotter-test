@@ -5,11 +5,11 @@ import type { PlaceDraft, PlanResponse, RouteOption } from "./types";
 import { TripForm } from "./components/TripForm";
 import { RoutePanel } from "./components/RoutePanel";
 import { MapView } from "./components/MapView";
-import { IconRail } from "./components/IconRail";
+import { TopNav } from "./components/TopNav";
 import { AnalysisCard } from "./components/AnalysisCard";
 import { TimelineCard } from "./components/TimelineCard";
 import { StatusCard } from "./components/StatusCard";
-import { IconClose, IconExpand, LogoMark } from "./components/icons";
+import { IconClose, IconExpand } from "./components/icons";
 
 const SAMPLE = {
   origin: { label: "Chicago, IL", lat: 41.8781, lon: -87.6298 },
@@ -95,7 +95,7 @@ export function App() {
 
   return (
     <div className="shell">
-      <IconRail />
+      <TopNav />
       <div className="canvas">
         {loading && <div className="progress" role="progressbar" aria-label="Planning trip" />}
         <div className="map-frame">
@@ -104,7 +104,6 @@ export function App() {
         <div className="overlay">
           <section className="panel planner" aria-label="Routes available">
             <header className="panel-head">
-              <LogoMark size={26} />
               <h2>Routes available</h2>
               {plan && <span className="count-pill">{plan.routes.length}</span>}
               <button

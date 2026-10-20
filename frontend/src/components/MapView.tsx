@@ -34,7 +34,7 @@ export function MapView({ plan, selectedId, hour, focus, onSelectRoute }: MapVie
     if (!container || mapRef.current) return;
     const map = L.map(container, { zoomControl: false, minZoom: 3, maxZoom: 16 }).setView([39.5, -98], 4);
     const attribution = 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ';
-    L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}", {
+    L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}", {
       attribution,
       maxZoom: 16,
     }).addTo(map);
@@ -45,7 +45,7 @@ export function MapView({ plan, selectedId, hour, focus, onSelectRoute }: MapVie
       labels.style.pointerEvents = "none";
     }
     L.tileLayer(
-      "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}",
+      "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}",
       { pane: "labels", maxZoom: 16 },
     ).addTo(map);
     const corridor = new CorridorCanvasLayer();
@@ -75,7 +75,7 @@ export function MapView({ plan, selectedId, hour, focus, onSelectRoute }: MapVie
       const active = route.id === selected;
       const latlngs = route.geometry.map(([lon, lat]) => [lat, lon] as [number, number]);
       if (active) {
-        L.polyline(latlngs, { color: "#ffffff", weight: 11, opacity: 0.95, interactive: false }).addTo(group);
+        L.polyline(latlngs, { color: "#083238", weight: 11, opacity: 0.95, interactive: false }).addTo(group);
       }
       const line = L.polyline(latlngs, {
         color: routeColor(plan, route.id, active),

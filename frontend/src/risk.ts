@@ -16,10 +16,10 @@ export const RISK_NAME: Record<RiskLabel, string> = {
   no_travel: "No travel",
 };
 
-const ROUTE_MUTED = ["#b7c3d4", "#e0b15a", "#9aa8ba"];
+const ROUTE_MUTED = ["#7f97a3", "#e0b15a", "#8fb8c4"];
 
 export function routeColor(plan: PlanResponse, routeId: string, active = false): string {
-  if (active) return "#2f6bff";
+  if (active) return "#2ec9c0";
   const index = plan.routes.findIndex((route) => route.id === routeId);
   const safe = index < 0 ? 0 : index;
   return ROUTE_MUTED[safe % ROUTE_MUTED.length];
