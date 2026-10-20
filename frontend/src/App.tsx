@@ -96,7 +96,7 @@ export function App() {
   return (
     <div className="shell">
       <TopNav />
-      <div className="canvas">
+      <div className={plan && selected ? "canvas" : "canvas no-dock"}>
         {loading && <div className="progress" role="progressbar" aria-label="Planning trip" />}
         <div className="map-frame">
           <MapView plan={plan} selectedId={selectedId} hour={hour} focus={focus} onSelectRoute={setSelectedId} />
@@ -159,19 +159,23 @@ export function App() {
             <h2>Shipment route overview</h2>
             <p>{selected ? `Distance: ${formatMiles(selected.distance_miles)}` : "Distance: —"}</p>
           </header>
-          <AnalysisCard
-            plan={plan}
-            route={selected}
-            hour={Math.min(hour, maxHour)}
-            maxHour={plan ? maxHour : 48}
-            onHour={setHour}
-          />
-          <TimelineCard
-            plan={plan}
-            route={selected}
-            onFocus={(lat, lon) => setFocus({ lat, lon, token: Date.now() })}
-          />
-          <StatusCard plan={plan} route={selected} />
+          {plan && selected && (
+            <>
+              <AnalysisCard
+                plan={plan}
+                route={selected}
+                hour={Math.min(hour, maxHour)}
+                maxHour={maxHour}
+                onHour={setHour}
+              />
+              <TimelineCard
+                plan={plan}
+                route={selected}
+                onFocus={(lat, lon) => setFocus({ lat, lon, token: Date.now() })}
+              />
+              <StatusCard plan={plan} route={selected} />
+            </>
+          )}
         </div>
       </div>
     </div>
