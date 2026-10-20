@@ -1076,6 +1076,14 @@ input[type="range"] { width: 100%; accent-color: var(--blue); }
   animation: node-pop 0.4s ease;
 }
 
+.route-badge-out span {
+  animation: badge-out 0.28s ease forwards;
+}
+
+@keyframes badge-out {
+  to { opacity: 0; transform: scale(0.92); }
+}
+
 .delay-label, .alert-label {
   background: transparent !important;
   border: 0 !important;

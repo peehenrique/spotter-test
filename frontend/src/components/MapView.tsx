@@ -29,7 +29,18 @@ export function MapView({ plan, selectedId, hour, focus, onSelectRoute }: MapVie
   const onSelectRef = useRef(onSelectRoute);
   const framedPlan = useRef<PlanResponse | null>(null);
   const framedRoute = useRef<string | null>(null);
+  const badgeRef = useRef<L.Marker | null>(null);
+  const badgeTimer = useRef<number | null>(null);
   onSelectRef.current = onSelectRoute;
+
+  function clearRouteBadge() {
+    if (badgeTimer.current != null) {
+      window.clearTimeout(badgeTimer.current);
+      badgeTimer.current = null;
+    }
+    badgeRef.current?.remove();
+    badgeRef.current = null;
+  }
 
   useEffect(() => {
     const container = containerRef.current;
@@ -87,19 +98,6 @@ export function MapView({ plan, selectedId, hour, focus, onSelectRoute }: MapVie
       });
       line.on("click", () => onSelectRef.current(route.id));
       line.addTo(group);
-      if (active) {
-        L.marker(along(latlngs, 0.5), {
-          interactive: false,
-          keyboard: false,
-          zIndexOffset: 700,
-          icon: L.divIcon({
-            className: "route-badge",
-            html: `<span>${escapeHtml(route.label)}</span>`,
-            iconSize: [96, 28],
-            iconAnchor: [48, 14],
-          }),
-        }).addTo(group);
-      }
       if (!active && selectedRoute) {
         const delta = Math.round((route.duration_seconds - selectedRoute.duration_seconds) / 60);
         if (delta !== 0) {
@@ -190,9 +188,14 @@ export function MapView({ plan, selectedId, hour, focus, onSelectRoute }: MapVie
     if (framedPlan.current !== plan) {
       framedPlan.current = plan;
       framedRoute.current = selected;
+      clearRouteBadge();
+      document.documentElement.dataset.badge = "new-plan";
       return;
     }
-    if (framedRoute.current === selected) return;
+    if (framedRoute.current === selected) {
+      document.documentElement.dataset.badge = "same";
+      return;
+    }
     framedRoute.current = selected;
     const route = plan.routes.find((item) => item.id === selected);
     if (!route || route.geometry.length === 0) return;
@@ -205,7 +208,36 @@ export function MapView({ plan, selectedId, hour, focus, onSelectRoute }: MapVie
       duration: 0.7,
       maxZoom: 9,
     });
+    clearRouteBadge();
+    const latlngs = route.geometry.map(([lon, lat]) => [lat, lon] as [number, number]);
+    const marker = L.marker(along(latlngs, 0.5), {
+      interactive: false,
+      keyboard: false,
+      zIndexOffset: 700,
+      icon: L.divIcon({
+        className: "route-badge",
+        html: `<span>${escapeHtml(route.label)}</span>`,
+        iconSize: [96, 28],
+        iconAnchor: [48, 14],
+      }),
+    }).addTo(map);
+    badgeRef.current = marker;
+    badgeTimer.current = window.setTimeout(() => {
+      marker.getElement()?.classList.add("route-badge-out");
+      badgeTimer.current = window.setTimeout(() => {
+        marker.remove();
+        if (badgeRef.current === marker) badgeRef.current = null;
+        badgeTimer.current = null;
+      }, 280);
+    }, 2500);
   }, [plan, selectedId]);
+
+  useEffect(() => {
+    return () => {
+      if (badgeTimer.current != null) window.clearTimeout(badgeTimer.current);
+      badgeRef.current?.remove();
+    };
+  }, []);
 
   useEffect(() => {
     corridorRef.current?.setFrame(plan?.corridor.points ?? [], hour);
