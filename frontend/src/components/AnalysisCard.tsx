@@ -1,7 +1,8 @@
+import { useState } from "react";
 import type { PlanResponse, RouteOption } from "../types";
 import { formatDuration, formatForecastHour, formatMiles, formatPounds, shortPlace } from "../format";
 import { RISK_COLOR, RISK_NAME } from "../risk";
-import { IconArrowUp, IconExpand } from "./icons";
+import { IconArrowUp } from "./icons";
 
 interface AnalysisCardProps {
   plan: PlanResponse | null;
@@ -12,10 +13,14 @@ interface AnalysisCardProps {
 }
 
 export function AnalysisCard({ plan, route, hour, maxHour, onHour }: AnalysisCardProps) {
+  const [open, setOpen] = useState(false);
   const hours = plan?.corridor.hours ?? [];
   const stamp = hours[hour];
   const hourLabel = stamp ? formatForecastHour(stamp, hour) : "0–48h after departure";
   const summary = route?.summary;
+  const headline = route
+    ? `${formatMiles(route.distance_miles)} · ${formatDuration(route.duration_seconds)} · risk ${summary?.average_risk.toFixed(2)}`
+    : "Plan a trip to score the route";
 
   function stepHour() {
     if (!plan) return;
@@ -23,59 +28,68 @@ export function AnalysisCard({ plan, route, hour, maxHour, onHour }: AnalysisCar
   }
 
   return (
-    <section className="panel analysis" aria-label="AI route analysis">
-      <header className="panel-head">
+    <section className={open ? "panel analysis open" : "panel analysis"} aria-label="AI route analysis">
+      <button
+        type="button"
+        className="analysis-toggle"
+        aria-expanded={open}
+        onClick={() => setOpen((value) => !value)}
+      >
         <span className="spark" aria-hidden="true">
           <TruckGlyph />
         </span>
-        <h2>AI route analysis</h2>
-        <span className="icon-btn end" aria-hidden="true">
-          <IconExpand />
+        <span className="analysis-copy">
+          <h2>AI route analysis</h2>
+          {!open && <p className="analysis-summary">{headline}</p>}
         </span>
-      </header>
-      <TruckArt />
-      <dl className="facts">
-        <Fact label="Departure" value={plan ? shortPlace(plan.origin.label) : "—"} />
-        <Fact label="Destination" value={plan ? shortPlace(plan.destination.label) : "—"} />
-        <Fact label="Total distance" value={route ? formatMiles(route.distance_miles) : "—"} />
-        <Fact label="Travel time" value={route ? formatDuration(route.duration_seconds) : "—"} />
-        <Fact label="Load weight" value={plan ? formatPounds(plan.load_weight_lb) : "—"} />
-        <Fact label="Average risk" value={summary ? summary.average_risk.toFixed(2) : "—"} />
-      </dl>
-      {plan && <p className="reason" title={plan.recommendation_reason}>{plan.recommendation_reason}</p>}
-      <div className="hazard-wrap">
-        <button type="button" className="step-btn" onClick={stepHour} disabled={!plan} aria-label="Next forecast hour">
-          <IconArrowUp />
-        </button>
-        <div className="hazard-bar">
-          <Hazard tone="bad" value={summary ? miles(summary.no_travel_miles) : "—"} label="No go" />
-          <Hazard tone="warn" value={summary ? miles(summary.severe_miles) : "—"} label="Severe" />
-          <Hazard tone="mid" value={summary ? miles(summary.high_miles) : "—"} label="High" />
+        <span className={open ? "chevron open" : "chevron"} aria-hidden="true">
+          <IconArrowUp size={16} />
+        </span>
+      </button>
+      {open && (
+        <div className="analysis-body">
+          <dl className="facts">
+            <Fact label="Departure" value={plan ? shortPlace(plan.origin.label) : "—"} />
+            <Fact label="Destination" value={plan ? shortPlace(plan.destination.label) : "—"} />
+            <Fact label="Total distance" value={route ? formatMiles(route.distance_miles) : "—"} />
+            <Fact label="Travel time" value={route ? formatDuration(route.duration_seconds) : "—"} />
+            <Fact label="Load weight" value={plan ? formatPounds(plan.load_weight_lb) : "—"} />
+            <Fact label="Average risk" value={summary ? summary.average_risk.toFixed(2) : "—"} />
+          </dl>
+          {plan && <p className="reason">{plan.recommendation_reason}</p>}
+          <div className="hazard-row">
+            <Hazard tone="bad" value={summary ? miles(summary.no_travel_miles) : "—"} label="No go" />
+            <Hazard tone="warn" value={summary ? miles(summary.severe_miles) : "—"} label="Severe" />
+            <Hazard tone="mid" value={summary ? miles(summary.high_miles) : "—"} label="High" />
+          </div>
+          <div className="forecast">
+            <div className="forecast-copy">
+              <strong>Corridor forecast</strong>
+              <button type="button" className="text-btn" onClick={stepHour} disabled={!plan}>
+                Next hour
+              </button>
+            </div>
+            <span className="forecast-hour">{hourLabel}</span>
+            <input
+              type="range"
+              min={0}
+              max={maxHour}
+              value={Math.min(hour, maxHour)}
+              disabled={!plan}
+              aria-label="Forecast hour"
+              onChange={(event) => onHour(Number(event.target.value))}
+            />
+            <div className="legend">
+              {(Object.keys(RISK_NAME) as (keyof typeof RISK_NAME)[]).map((label) => (
+                <span key={label}>
+                  <i style={{ background: RISK_COLOR[label] }} />
+                  {RISK_NAME[label]}
+                </span>
+              ))}
+            </div>
+          </div>
         </div>
-      </div>
-      <div className="forecast">
-        <div className="forecast-copy">
-          <strong>Corridor forecast</strong>
-          <span>{hourLabel}</span>
-        </div>
-        <input
-          type="range"
-          min={0}
-          max={maxHour}
-          value={Math.min(hour, maxHour)}
-          disabled={!plan}
-          aria-label="Forecast hour"
-          onChange={(event) => onHour(Number(event.target.value))}
-        />
-        <div className="legend">
-          {(Object.keys(RISK_NAME) as (keyof typeof RISK_NAME)[]).map((label) => (
-            <span key={label}>
-              <i style={{ background: RISK_COLOR[label] }} />
-              {RISK_NAME[label]}
-            </span>
-          ))}
-        </div>
-      </div>
+      )}
     </section>
   );
 }
@@ -117,21 +131,3 @@ function TruckGlyph() {
   );
 }
 
-function TruckArt() {
-  return (
-    <svg className="truck-art" viewBox="0 0 280 78" role="img" aria-label="Truck">
-      <rect x="8" y="18" width="154" height="38" rx="5" fill="#c5ceda" />
-      <rect x="18" y="26" width="134" height="8" rx="2" fill="#e7edf4" />
-      <path d="M162 24h48c8 0 14 4 20 12l16 8v12H162z" fill="#2f6bff" />
-      <path d="M186 30h26c6 0 12 3 16 8H186z" fill="#d7e4ff" />
-      <circle cx="52" cy="60" r="9" fill="#1c1f26" />
-      <circle cx="52" cy="60" r="3.5" fill="#d5dce6" />
-      <circle cx="86" cy="60" r="9" fill="#1c1f26" />
-      <circle cx="86" cy="60" r="3.5" fill="#d5dce6" />
-      <circle cx="196" cy="60" r="9" fill="#1c1f26" />
-      <circle cx="196" cy="60" r="3.5" fill="#d5dce6" />
-      <circle cx="222" cy="60" r="9" fill="#1c1f26" />
-      <circle cx="222" cy="60" r="3.5" fill="#d5dce6" />
-    </svg>
-  );
-}
